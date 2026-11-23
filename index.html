@@ -47,7 +47,8 @@ input,textarea,select{font-family:inherit;color:inherit}
 .card{background:var(--card);border-radius:var(--r);box-shadow:0 1px 3px rgba(0,0,0,.04)}
 
 /* filters */
-.filters{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;padding:0 .2rem .2rem}
+.filters{display:flex;flex-direction:column;gap:.4rem;padding:0 .2rem .5rem}
+.frow{display:flex;flex-wrap:wrap;gap:.4rem}
 .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:.3rem .8rem;font-size:.88rem;font-weight:700;color:var(--sub)}
 .chip.on{border-color:var(--ink);color:var(--ink)}
 .chip .dot{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;margin-right:.35rem;vertical-align:.05rem}
@@ -90,9 +91,6 @@ input,textarea,select{font-family:inherit;color:inherit}
   .cal-title{font-size:1.25rem}
   .nav{width:2.2rem;height:2.2rem}
   .today-btn{height:2.2rem;padding:0 .6rem}
-  .filters{flex-wrap:nowrap;overflow-x:auto;margin:0 -.5rem .3rem;padding:0 .5rem .3rem;scrollbar-width:none}
-  .filters::-webkit-scrollbar{display:none}
-  .chip{flex:none}
   .top-in{gap:.4rem;padding:.55rem .7rem}
   .brand{font-size:1.05rem}
   .seg button{padding:.38rem .6rem;font-size:.85rem}
@@ -399,11 +397,11 @@ const wrap = $("wrap");
 function filtersHTML(){
   const t = [["all","전체",""],["task","할 일","var(--task)"],["meet","약속","var(--meet)"],["note","메모","var(--note)"]];
   const w = [["all","모두",""],["alex","알렉스","var(--alex)"],["wang","왕경","var(--wang)"],["both","함께","var(--both)"]];
-  return '<div class="filters">'+
+  return '<div class="filters"><div class="frow">'+
     t.map(([v,l,c])=>'<button class="chip'+(S.fType===v?' on':'')+'" data-ft="'+v+'">'+(c?'<span class="dot" style="background:'+c+'"></span>':'')+l+'</button>').join("")+
-    '<span class="fsep"></span>'+
+    '</div><div class="frow">'+
     w.map(([v,l,c])=>'<button class="chip'+(S.fWho===v?' on':'')+'" data-fw="'+v+'">'+(c?'<span class="dot" style="background:'+c+'"></span>':'')+l+'</button>').join("")+
-  '</div>';
+  '</div></div>';
 }
 
 function evCardHTML(ev, s){
