@@ -10,9 +10,8 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="우리 달력">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
   --bg:#F2F4F6; --card:#FFFFFF; --ink:#191F28; --sub:#6B7684; --faint:#B0B8C1; --line:#E5E8EB;
@@ -24,14 +23,14 @@
   --r:18px;
 }
 *{box-sizing:border-box}
-html{font-size:17px}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45}
+html{font-size:15px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",Roboto,"Noto Sans KR",sans-serif;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;line-height:1.45}
 button{font-family:inherit;cursor:pointer;color:inherit}
 input,textarea,select{font-family:inherit;color:inherit}
 
 .top{position:sticky;top:0;z-index:20;background:rgba(242,244,246,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .top-in{max-width:1320px;margin:0 auto;padding:.7rem 1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
-.brand{font-weight:900;font-size:1.25rem;letter-spacing:-.02em;display:flex;align-items:center;gap:.45rem;margin-right:auto}
+.brand{font-weight:700;font-size:1.1rem;letter-spacing:-.02em;display:flex;align-items:center;gap:.45rem;margin-right:auto}
 .brand .heart{color:var(--wang)}
 .seg{display:inline-flex;background:#E5E8EB;border-radius:12px;padding:3px}
 .seg button{border:0;background:transparent;padding:.42rem .85rem;border-radius:9px;font-size:.92rem;font-weight:700;color:var(--sub)}
@@ -57,7 +56,7 @@ input,textarea,select{font-family:inherit;color:inherit}
 /* month */
 .cal{padding:1rem 1rem 1.1rem}
 .cal-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem}
-.cal-title{font-size:1.7rem;font-weight:900;letter-spacing:-.03em;margin-right:auto}
+.cal-title{font-size:1.35rem;font-weight:700;letter-spacing:-.03em;margin-right:auto}
 .nav{border:0;background:var(--bg);width:2.5rem;height:2.5rem;border-radius:12px;font-size:1.3rem;font-weight:700}
 .today-btn{border:0;background:var(--bg);height:2.5rem;padding:0 .9rem;border-radius:12px;font-weight:700;font-size:.92rem}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:.85rem;font-weight:700;color:var(--sub);padding-bottom:.35rem}
@@ -88,7 +87,7 @@ input,textarea,select{font-family:inherit;color:inherit}
   .cell .hname,.cell .ch,.cell .more{display:none}
   .cells-has .dots{display:flex}
   .cell .dots{display:flex;justify-content:center}
-  .cal-title{font-size:1.3rem}
+  .cal-title{font-size:1.25rem}
   .nav{width:2.2rem;height:2.2rem}
   .today-btn{height:2.2rem;padding:0 .6rem}
   .filters{flex-wrap:nowrap;overflow-x:auto;margin:0 -.5rem .3rem;padding:0 .5rem .3rem;scrollbar-width:none}
@@ -105,7 +104,7 @@ input,textarea,select{font-family:inherit;color:inherit}
 .day{padding:1.1rem 1.1rem 1.3rem}
 @media(min-width:980px){.day{position:sticky;top:5rem;max-height:calc(100vh - 6rem);overflow:auto}}
 .day-head{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
-.day-title{font-size:1.65rem;font-weight:900;letter-spacing:-.03em}
+.day-title{font-size:1.3rem;font-weight:700;letter-spacing:-.03em}
 .tag{font-size:.8rem;font-weight:700;padding:.15rem .55rem;border-radius:999px;background:var(--blue);color:#fff}
 .tag.h{background:var(--meet-bg);color:var(--sun)}
 .day-sub{color:var(--sub);font-size:.92rem;margin-bottom:.9rem}
@@ -126,15 +125,15 @@ input,textarea,select{font-family:inherit;color:inherit}
 .pill.task{background:var(--task-bg);color:var(--task)}
 .pill.meet{background:var(--meet-bg);color:var(--meet)}
 .pill.note{background:var(--note-bg);color:#9A6A00}
-.time{color:var(--ink);font-size:1rem;font-weight:900}
+.time{color:var(--ink);font-size:.9rem;font-weight:700}
 .who{margin-left:auto;font-size:.78rem;padding:.08rem .55rem;border-radius:999px;color:#fff}
 .who.alex{background:var(--alex)} .who.wang{background:var(--wang)} .who.both{background:var(--both)}
-.ev .title{font-size:1.35rem;font-weight:700;letter-spacing:-.02em;line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}
+.ev .title{font-size:1.1rem;font-weight:700;letter-spacing:-.02em;line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}
 .ev.isdone .title{text-decoration:line-through;color:var(--faint)}
-.ev .place{font-size:1rem;color:var(--sub);margin-top:.2rem}
-.ev .text{font-size:1.05rem;margin-top:.4rem;white-space:pre-wrap;overflow-wrap:anywhere;color:#333D4B}
+.ev .place{font-size:.92rem;color:var(--sub);margin-top:.2rem}
+.ev .text{font-size:.95rem;margin-top:.4rem;white-space:pre-wrap;overflow-wrap:anywhere;color:#333D4B}
 .ev .rep{font-size:.78rem;color:var(--sub);font-weight:500}
-.chk{flex:none;width:2.1rem;height:2.1rem;border-radius:50%;border:2.5px solid var(--faint);background:#fff;display:grid;place-items:center;margin-top:.15rem;padding:0}
+.chk{flex:none;width:1.8rem;height:1.8rem;border-radius:50%;border:2.5px solid var(--faint);background:#fff;display:grid;place-items:center;margin-top:.15rem;padding:0}
 .chk svg{width:1.1rem;height:1.1rem;opacity:0}
 .chk.on{background:var(--task);border-color:var(--task)}
 .chk.on svg{opacity:1}
@@ -143,17 +142,17 @@ input,textarea,select{font-family:inherit;color:inherit}
 
 /* agenda */
 .agenda{padding:1.1rem}
-.agenda h2{font-size:1.6rem;font-weight:900;letter-spacing:-.03em;margin:.1rem 0 1rem}
+.agenda h2{font-size:1.3rem;font-weight:700;letter-spacing:-.03em;margin:.1rem 0 1rem}
 .agroup{margin-bottom:1.4rem}
 .agroup-h{display:flex;align-items:baseline;gap:.5rem;margin:0 0 .55rem .2rem;flex-wrap:wrap}
-.agroup-h .d{font-size:1.25rem;font-weight:900}
+.agroup-h .d{font-size:1.05rem;font-weight:700}
 .agroup-h .rel{font-size:.85rem;color:var(--sub);font-weight:700}
 .agroup-h .rel.t{color:var(--blue)}
 .agroup.overdue .agroup-h .d{color:var(--sun)}
 @media(min-width:980px){.agenda .list{max-width:760px}}
 
 /* fab */
-.fab{position:fixed;right:1.2rem;bottom:1.2rem;z-index:25;border:0;background:var(--blue);color:#fff;border-radius:999px;padding:1rem 1.35rem;font-size:1.1rem;font-weight:900;box-shadow:0 8px 24px rgba(49,130,246,.4)}
+.fab{position:fixed;right:1.2rem;bottom:1.2rem;z-index:25;border:0;background:var(--blue);color:#fff;border-radius:999px;padding:.9rem 1.25rem;font-size:1rem;font-weight:700;box-shadow:0 8px 24px rgba(49,130,246,.4)}
 
 /* modal */
 .back{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:50;display:none;align-items:flex-end;justify-content:center}
@@ -161,12 +160,12 @@ input,textarea,select{font-family:inherit;color:inherit}
 @media(min-width:640px){.back{align-items:center}}
 .modal{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:1.3rem 1.2rem 1.4rem}
 @media(min-width:640px){.modal{border-radius:24px}}
-.modal h3{margin:0 0 1rem;font-size:1.4rem;font-weight:900}
+.modal h3{margin:0 0 1rem;font-size:1.2rem;font-weight:700}
 .f{margin-bottom:.95rem}
 .f label{display:block;font-size:.88rem;font-weight:700;color:var(--sub);margin-bottom:.35rem}
-.f input,.f textarea,.f select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:.7rem .8rem;font-size:1.05rem;background:#FAFBFC;outline:none}
+.f input,.f textarea,.f select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:.7rem .8rem;font-size:1rem;background:#FAFBFC;outline:none}
 .f input:focus,.f textarea:focus,.f select:focus{border-color:var(--blue);background:#fff}
-.f .big{font-size:1.3rem;font-weight:700}
+.f .big{font-size:1.1rem;font-weight:700}
 .f textarea{min-height:6.5rem;resize:vertical}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 .pick{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
@@ -178,7 +177,7 @@ input,textarea,select{font-family:inherit;color:inherit}
 .pick button.on.wang{border-color:var(--wang);background:var(--wang);color:#fff}
 .pick button.on.both{border-color:var(--both);background:var(--both);color:#fff}
 .mbtns{display:flex;gap:.5rem;margin-top:1.2rem}
-.mbtns button{border:0;border-radius:14px;padding:.9rem 1rem;font-weight:900;font-size:1.05rem}
+.mbtns button{border:0;border-radius:14px;padding:.9rem 1rem;font-weight:700;font-size:1.05rem}
 .save{flex:1;background:var(--blue);color:#fff}
 .cancel{background:var(--bg)}
 .del{background:var(--meet-bg);color:var(--meet)}
@@ -187,9 +186,9 @@ input,textarea,select{font-family:inherit;color:inherit}
 .wrap.stripmode .day{max-width:none}
 .strip{display:flex;gap:.45rem;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding:.3rem .1rem .5rem;margin:0 -.2rem;scrollbar-width:none;scroll-behavior:auto}
 .strip::-webkit-scrollbar{display:none}
-.sday{flex:none;scroll-snap-align:center;width:3.7rem;border:2px solid transparent;background:#F7F8FA;border-radius:16px;padding:.55rem 0 .5rem;display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.sday{flex:none;scroll-snap-align:center;width:3.3rem;border:2px solid transparent;background:#F7F8FA;border-radius:16px;padding:.55rem 0 .5rem;display:flex;flex-direction:column;align-items:center;gap:.15rem}
 .sday .wd{font-size:.78rem;font-weight:700;color:var(--sub)}
-.sday .dn{font-size:1.45rem;font-weight:900;line-height:1.1}
+.sday .dn{font-size:1.2rem;font-weight:700;line-height:1.1}
 .sday.sun .dn{color:var(--sun)} .sday.sat .dn{color:var(--sat)}
 .sday.today{border-color:var(--blue)}
 .sday.today .wd{color:var(--blue)}
@@ -198,7 +197,7 @@ input,textarea,select{font-family:inherit;color:inherit}
 .sdots{display:flex;gap:3px;height:.5rem;align-items:center}
 .sdots i{width:.45rem;height:.45rem;border-radius:50%;display:block}
 .sday.sel .sdots i{background:#fff!important}
-.sdots em{font-style:normal;font-size:.65rem;font-weight:900;color:var(--sub);line-height:1}
+.sdots em{font-style:normal;font-size:.65rem;font-weight:700;color:var(--sub);line-height:1}
 .sday.sel .sdots em{color:#fff}
 .sday.edge{width:3rem;background:transparent;color:var(--sub);font-size:1.4rem;font-weight:700;justify-content:center}
 .sday.edge small{font-size:.72rem}
