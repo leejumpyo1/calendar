@@ -678,6 +678,7 @@ $("bDel").addEventListener("click", async ()=>{
 const API_URL = "https://script.google.com/macros/s/AKfycbxddxmFbacDxmXM3JbfIf6kPW_sI4MmS67qjRviat5sGQXN8DtUeLjjE0PlPDaKwbVc/exec";
 // ▲▲▲
 
+function cacheEvents(){ lsSet("cal-cache", JSON.stringify({at:Date.now(), events:S.events})); }
 function newId(){return "e"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 let KEY = lsGet("cal-key","");
 let lastLoad = 0, loading = false, pending = 0;
@@ -700,12 +701,12 @@ async function load(silent){
   try{
     const res = await api("GET");
     if(res && res.ok){
-      if(pending===0){ S.events = cleanEvents(res.events); render(); }
+      if(pending===0){ S.events = cleanEvents(res.events); cacheEvents(); render(); }
       lastLoad = Date.now(); setStatus("");
     } else if(res && res.error==="auth"){ showLogin("비밀번호가 맞지 않아요"); }
     else if(!silent) setStatus("일정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.");
   }catch(e){
-    if(!silent || !lastLoad) setStatus("인터넷 연결을 확인해 주세요. 보이는 일정이 최신이 아닐 수 있어요.");
+    if(!silent || !lastLoad) setStatus(S.events.length ? "오프라인이에요. 마지막으로 저장된 일정을 보여 드려요. 추가·수정은 인터넷 연결 후에 할 수 있어요." : "인터넷 연결을 확인해 주세요.");
   }finally{ loading = false; }
 }
 async function save(id,data,msg){
@@ -718,7 +719,7 @@ async function save(id,data,msg){
   try{
     const res = await api("POST",{action:"save",event:ev});
     if(!res || !res.ok) throw new Error(res && res.error || "fail");
-    toast(msg);
+    toast(msg); cacheEvents();
   }catch(e){
     S.events = before; render();
     if(e.message==="auth") showLogin("비밀번호가 맞지 않아요"); else toast("저장하지 못했어요. 인터넷 연결을 확인해 주세요.");
@@ -731,7 +732,7 @@ async function remove(id){
   try{
     const res = await api("POST",{action:"delete",id});
     if(!res || !res.ok) throw new Error(res && res.error || "fail");
-    toast("삭제했어요");
+    toast("삭제했어요"); cacheEvents();
   }catch(e){
     S.events = before; render();
     if(e.message==="auth") showLogin("비밀번호가 맞지 않아요"); else toast("삭제하지 못했어요. 인터넷 연결을 확인해 주세요.");
@@ -764,23 +765,29 @@ $("loginForm").addEventListener("submit", async e=>{
     const res = await api("GET");
     if(res && res.ok){
       lsSet("cal-key",k); $("login").classList.remove("show"); $("iKey").value="";
-      S.events = cleanEvents(res.events); lastLoad=Date.now(); setStatus(""); render();
+      S.events = cleanEvents(res.events); cacheEvents(); lastLoad=Date.now(); setStatus(""); render();
     } else { KEY=""; $("loginErr").textContent = res && res.error==="auth" ? "비밀번호가 맞지 않아요" : "서버 오류가 있어요"; }
   }catch(err){ KEY=""; $("loginErr").textContent="연결하지 못했어요. 인터넷을 확인해 주세요."; }
 });
-$("logoutBtn").addEventListener("click",()=>{ lsSet("cal-key",""); KEY=""; S.events=[]; render(); showLogin(""); });
+$("logoutBtn").addEventListener("click",()=>{ lsSet("cal-key",""); lsSet("cal-cache",""); KEY=""; S.events=[]; render(); showLogin(""); });
 
 /* ---------- connect ---------- */
 render();
 if(!/^https:\/\/script\.google\.com\//.test(API_URL)){
   setStatus("아직 Google 시트와 연결되지 않았어요. index.html의 API_URL에 Apps Script 웹 앱 주소를 넣어 주세요.");
 } else if(!KEY){ showLogin(""); }
-else { setStatus("일정을 불러오는 중…"); load(false); }
+else {
+  // 마지막으로 받은 일정을 먼저 보여 주기 (오프라인에서도 보이도록)
+  try{ const c = JSON.parse(lsGet("cal-cache","") || "null"); if(c && Array.isArray(c.events)){ S.events = cleanEvents(c.events); render(); } }catch(e){}
+  setStatus(navigator.onLine===false ? "오프라인이에요. 마지막으로 저장된 일정을 보여 드려요. 추가·수정은 인터넷 연결 후에 할 수 있어요." : "일정을 불러오는 중…");
+  load(false);
+}
 // 다른 사람이 바꾼 내용 자동 반영
 setInterval(()=>{ if(document.visibilityState==="visible" && KEY && pending===0) load(true); }, 20000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible" && KEY && Date.now()-lastLoad>5000) load(true); });
 
 })();
 </script>
+<script>if('serviceWorker' in navigator && location.protocol==='https:' && /github\.io$/.test(location.hostname)){ addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }</script>
 </body>
 </html>
