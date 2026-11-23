@@ -199,7 +199,7 @@ input,textarea,select{font-family:inherit;color:inherit}
 .sday.sel .sdots em{color:#fff}
 .sday.edge{width:3rem;background:transparent;color:var(--sub);font-size:1.4rem;font-weight:700;justify-content:center}
 .sday.edge small{font-size:.72rem}
-.toast{position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%) translateY(20px);background:#191F28;color:#fff;padding:.7rem 1.1rem;border-radius:12px;font-size:.95rem;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+.toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);background:#191F28;color:#fff;padding:.7rem 1.1rem;border-radius:12px;font-size:.95rem;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -224,7 +224,6 @@ input,textarea,select{font-family:inherit;color:inherit}
 <main class="wrap month" id="wrap"></main>
 <footer style="text-align:center;padding:.5rem 0 6rem"><button id="logoutBtn" style="border:0;background:none;color:var(--faint);font-size:.85rem;text-decoration:underline">로그아웃</button></footer>
 
-<button class="fab" id="fab">＋ 추가</button>
 
 <div class="back" id="back">
   <form class="modal" id="form" autocomplete="off">
@@ -517,7 +516,10 @@ function placeStrip(prev){
 
 function renderAgenda(){
   const t = todayStr();
-  let html = '<section class="card agenda"><h2>다가오는 일정</h2>'+filtersHTML()+'<div style="height:.8rem"></div>';
+  let html = '<section class="card agenda"><h2>다가오는 일정</h2>'+filtersHTML()+'<div class="add-row" style="margin-top:.4rem">'+
+    '<button class="a-task" data-add="task">＋ 할 일</button>'+
+    '<button class="a-meet" data-add="meet">＋ 약속</button>'+
+    '<button class="a-note" data-add="note">＋ 메모</button></div>';
   // overdue unfinished one-time tasks (last 60 days)
   const overdue = S.events.filter(e=>passFilter(e) && e.type==="task" && !e.repeat && e.date<t && dayDiff(e.date,t)<=60 && !isDone(e,e.date))
     .sort((a,b)=>a.date<b.date?-1:1);
@@ -534,7 +536,7 @@ function renderAgenda(){
     html += '<div class="agroup"><div class="agroup-h"><span class="d">'+fmtLong(s)+'</span><span class="rel'+(i===0?' t':'')+'">'+relLabel(s)+'</span>'+(HOLIDAYS[s]?'<span class="tag h">'+HOLIDAYS[s]+'</span>':'')+'</div><div class="list">'+
       evs.map(e=>evCardHTML(e,s)).join("")+'</div></div>';
   }
-  if(!any && !overdue.length) html += '<div class="empty"><b>🌿</b>앞으로 4개월 동안 일정이 없어요.<br>오른쪽 아래 ＋ 버튼으로 추가해 보세요.</div>';
+  if(!any && !overdue.length) html += '<div class="empty"><b>🌿</b>앞으로 4개월 동안 일정이 없어요.<br>위 버튼으로 추가해 보세요.</div>';
   html += '</section>';
   wrap.className = "wrap";
   wrap.innerHTML = html;
@@ -577,7 +579,7 @@ wrap.addEventListener("click", e=>{
     if(S.layout==='grid' && window.innerWidth<980){const p=document.querySelector(".day");p&&p.scrollIntoView({behavior:"smooth",block:"start"});}
   }
   else if(el.dataset.nav!==undefined) moveMonth(Number(el.dataset.nav));
-  else if(el.dataset.add) openForm(null, el.dataset.add, S.selected);
+  else if(el.dataset.add) openForm(null, el.dataset.add, S.view==="month" ? S.selected : todayStr());
   else if(el.dataset.done) toggleDone(el.dataset.done, el.dataset.d);
   else if(el.dataset.edit) openForm(el.dataset.edit);
   else if(el.dataset.ft){S.fType=el.dataset.ft;render();}
@@ -601,7 +603,6 @@ $("layoutSeg").addEventListener("click",e=>{
   S.layout=b.dataset.l; lsSet("cal-layout",S.layout); stripCenter=true; syncLayoutSeg(); render();
 });
 
-$("fab").addEventListener("click",()=>openForm(null,"task",S.view==="month"?S.selected:todayStr()));
 
 /* ---------- form ---------- */
 let editing = null, fType="task", fWho=lsGet("cal-who","both"), delArmed=false;
