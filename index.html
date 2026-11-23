@@ -25,8 +25,6 @@
 }
 *{box-sizing:border-box}
 html{font-size:17px}
-html.lg{font-size:20px}
-html.xl{font-size:23px}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45}
 button{font-family:inherit;cursor:pointer;color:inherit}
 input,textarea,select{font-family:inherit;color:inherit}
@@ -186,6 +184,24 @@ input,textarea,select{font-family:inherit;color:inherit}
 .del{background:var(--meet-bg);color:var(--meet)}
 .del.arm{background:var(--meet);color:#fff}
 
+.wrap.stripmode .day{max-width:none}
+.strip{display:flex;gap:.45rem;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding:.3rem .1rem .5rem;margin:0 -.2rem;scrollbar-width:none;scroll-behavior:auto}
+.strip::-webkit-scrollbar{display:none}
+.sday{flex:none;scroll-snap-align:center;width:3.7rem;border:2px solid transparent;background:#F7F8FA;border-radius:16px;padding:.55rem 0 .5rem;display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.sday .wd{font-size:.78rem;font-weight:700;color:var(--sub)}
+.sday .dn{font-size:1.45rem;font-weight:900;line-height:1.1}
+.sday.sun .dn{color:var(--sun)} .sday.sat .dn{color:var(--sat)}
+.sday.today{border-color:var(--blue)}
+.sday.today .wd{color:var(--blue)}
+.sday.sel{background:var(--blue);border-color:var(--blue)}
+.sday.sel .wd,.sday.sel .dn{color:#fff}
+.sdots{display:flex;gap:3px;height:.5rem;align-items:center}
+.sdots i{width:.45rem;height:.45rem;border-radius:50%;display:block}
+.sday.sel .sdots i{background:#fff!important}
+.sdots em{font-style:normal;font-size:.65rem;font-weight:900;color:var(--sub);line-height:1}
+.sday.sel .sdots em{color:#fff}
+.sday.edge{width:3rem;background:transparent;color:var(--sub);font-size:1.4rem;font-weight:700;justify-content:center}
+.sday.edge small{font-size:.72rem}
 .toast{position:fixed;left:50%;bottom:5.5rem;transform:translateX(-50%) translateY(20px);background:#191F28;color:#fff;padding:.7rem 1.1rem;border-radius:12px;font-size:.95rem;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -199,14 +215,17 @@ input,textarea,select{font-family:inherit;color:inherit}
       <button data-v="month" class="on">달력</button>
       <button data-v="agenda">일정 목록</button>
     </div>
-    <button class="iconbtn" id="sizeBtn" title="글자 크기">가 크기</button>
-    <button class="iconbtn" id="logoutBtn" title="로그아웃">나가기</button>
+    <div class="seg" id="layoutSeg" title="달력 모양">
+      <button data-l="grid">▦ 칸</button>
+      <button data-l="strip">⇆ 한 줄</button>
+    </div>
   </div>
 </header>
 
 <div class="status" id="status"><div id="statusText"></div></div>
 
 <main class="wrap month" id="wrap"></main>
+<footer style="text-align:center;padding:.5rem 0 6rem"><button id="logoutBtn" style="border:0;background:none;color:var(--faint);font-size:.85rem;text-decoration:underline">로그아웃</button></footer>
 
 <button class="fab" id="fab">＋ 추가</button>
 
@@ -336,6 +355,7 @@ function relLabel(s){
 
 /* ---------- state ---------- */
 const S = {
+  layout: (lsGet("cal-layout","grid")==="strip") ? "strip" : "grid",
   events: [],
   view: "month",
   cursor: (()=>{const t=new Date();return new Date(t.getFullYear(),t.getMonth(),1);})(),
@@ -437,7 +457,8 @@ function renderMonth(){
   const counts = {task:0,meet:0,note:0}; selEvs.forEach(e=>counts[e.type]++);
   const sub = selEvs.length ? Object.keys(counts).filter(k=>counts[k]).map(k=>TYPES[k]+" "+counts[k]+"개").join(" · ") : "등록된 일정이 없어요";
 
-  wrap.className = "wrap month";
+  const prevScroll = $("strip") ? $("strip").scrollLeft : null;
+  wrap.className = S.layout==="strip" ? "wrap stripmode" : "wrap month";
   wrap.innerHTML =
     '<section class="card cal">'+
       '<div class="cal-head">'+
@@ -447,8 +468,9 @@ function renderMonth(){
         '<button class="nav" data-nav="1" aria-label="다음 달">›</button>'+
       '</div>'+
       filtersHTML()+
-      '<div class="dow">'+DOW.map(d=>'<div>'+d+'</div>').join("")+'</div>'+
-      '<div class="grid" id="grid">'+cells+'</div>'+
+      (S.layout==="strip" ? stripHTML(y,m,t) :
+        '<div class="dow">'+DOW.map(d=>'<div>'+d+'</div>').join("")+'</div>'+
+        '<div class="grid" id="grid">'+cells+'</div>')+
     '</section>'+
     '<section class="card day">'+
       '<div class="day-head"><div class="day-title">'+fmtLong(sel)+'</div>'+
@@ -463,7 +485,37 @@ function renderMonth(){
       '</div>'+
       '<div class="list">'+(selEvs.length ? selEvs.map(e=>evCardHTML(e,sel)).join("") : '<div class="empty"><b>🗓️</b>이 날은 비어 있어요.<br>위 버튼으로 추가해 보세요.</div>')+'</div>'+
     '</section>';
-  bindSwipe();
+  if(S.layout==="strip") placeStrip(prevScroll); else bindSwipe();
+}
+
+/* ---------- one-line (strip) layout ---------- */
+let stripCenter = true;
+function stripHTML(y,m,t){
+  const n = new Date(y,m+1,0).getDate();
+  const pm = new Date(y,m-1,1).getMonth()+1, nm = new Date(y,m+1,1).getMonth()+1;
+  let h = '<div class="strip" id="strip"><button class="sday edge" data-nav="-1">‹<small>'+pm+'월</small></button>';
+  for(let d=1; d<=n; d++){
+    const s = ds(y,m,d), dt = new Date(y,m,d), wd = dt.getDay();
+    const evs = eventsOn(s), hol = HOLIDAYS[s];
+    const cls = ["sday"];
+    if(s===t) cls.push("today");
+    if(s===S.selected) cls.push("sel");
+    if(wd===0||hol) cls.push("sun"); else if(wd===6) cls.push("sat");
+    h += '<button class="'+cls.join(" ")+'" data-day="'+s+'"'+(hol?' title="'+hol+'"':'')+'>'+
+      '<span class="wd">'+(s===t?"오늘":DOW[wd])+'</span>'+
+      '<span class="dn">'+d+'</span>'+
+      '<span class="sdots">'+evs.slice(0,3).map(e=>'<i style="background:'+TYPE_COLOR[e.type]+'"></i>').join("")+(evs.length>3?'<em>+</em>':'')+'</span>'+
+    '</button>';
+  }
+  return h + '<button class="sday edge" data-nav="1">›<small>'+nm+'월</small></button></div>';
+}
+function placeStrip(prev){
+  const st = $("strip"); if(!st) return;
+  const sel = st.querySelector(".sday.sel");
+  if(stripCenter || prev==null){
+    if(sel) st.scrollLeft = sel.offsetLeft - (st.clientWidth - sel.offsetWidth)/2;
+  } else st.scrollLeft = prev;
+  stripCenter = false;
 }
 
 function renderAgenda(){
@@ -506,6 +558,7 @@ function bindSwipe(){
   },{passive:true});
 }
 function moveMonth(n){
+  stripCenter = true;
   if(n===0){const t=new Date();S.cursor=new Date(t.getFullYear(),t.getMonth(),1);S.selected=todayStr();}
   else{
     S.cursor=new Date(S.cursor.getFullYear(),S.cursor.getMonth()+n,1);
@@ -520,11 +573,11 @@ wrap.addEventListener("click", e=>{
   const el = e.target.closest("[data-day],[data-nav],[data-add],[data-edit],[data-done],[data-ft],[data-fw]");
   if(!el) return;
   if(el.dataset.day){
-    const s=el.dataset.day; S.selected=s;
+    const s=el.dataset.day; S.selected=s; stripCenter = S.layout!=="strip";
     const d=parse(s);
     if(d.getMonth()!==S.cursor.getMonth()) S.cursor=new Date(d.getFullYear(),d.getMonth(),1);
     render();
-    if(window.innerWidth<980){const p=document.querySelector(".day");p&&p.scrollIntoView({behavior:"smooth",block:"start"});}
+    if(S.layout==='grid' && window.innerWidth<980){const p=document.querySelector(".day");p&&p.scrollIntoView({behavior:"smooth",block:"start"});}
   }
   else if(el.dataset.nav!==undefined) moveMonth(Number(el.dataset.nav));
   else if(el.dataset.add) openForm(null, el.dataset.add, S.selected);
@@ -538,14 +591,18 @@ $("viewSeg").addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b) return;
   S.view=b.dataset.v;
   [...$("viewSeg").children].forEach(x=>x.classList.toggle("on",x===b));
-  render(); window.scrollTo({top:0});
+  syncLayoutSeg(); stripCenter=true; render(); window.scrollTo({top:0});
 });
 
-const SIZES=["","lg","xl"], SIZE_LABEL={"":"가 보통","lg":"가 크게","xl":"가 아주 크게"};
-let size = lsGet("cal-size","lg"); if(!SIZES.includes(size)) size="lg";
-function applySize(){document.documentElement.className=size;$("sizeBtn").textContent=SIZE_LABEL[size];}
-applySize();
-$("sizeBtn").addEventListener("click",()=>{size=SIZES[(SIZES.indexOf(size)+1)%3];lsSet("cal-size",size);applySize();});
+function syncLayoutSeg(){
+  [...$("layoutSeg").children].forEach(b=>b.classList.toggle("on",b.dataset.l===S.layout));
+  $("layoutSeg").style.display = S.view==="month" ? "" : "none";
+}
+syncLayoutSeg();
+$("layoutSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b||b.dataset.l===S.layout) return;
+  S.layout=b.dataset.l; lsSet("cal-layout",S.layout); stripCenter=true; syncLayoutSeg(); render();
+});
 
 $("fab").addEventListener("click",()=>openForm(null,"task",S.view==="month"?S.selected:todayStr()));
 
@@ -606,7 +663,7 @@ $("form").addEventListener("submit", async e=>{
   lsSet("cal-who",fWho);
   const id = editing || newId();
   closeForm();
-  S.selected = date;
+  S.selected = date; stripCenter = true;
   const d=parse(date); S.cursor=new Date(d.getFullYear(),d.getMonth(),1);
   await save(id,data, prev ? "수정했어요" : "추가했어요");
 });
