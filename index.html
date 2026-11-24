@@ -199,6 +199,15 @@ input,textarea,select{font-family:inherit;color:inherit}
 .sday.sel .sdots em{color:#fff}
 .sday.edge{width:3rem;background:transparent;color:var(--sub);font-size:1.4rem;font-weight:700;justify-content:center}
 .sday.edge small{font-size:.72rem}
+.foot{text-align:center;padding:.6rem 0 3rem;display:flex;gap:.45rem;justify-content:center;align-items:center;color:var(--faint);font-size:.85rem;flex-wrap:wrap}
+.foot button{border:0;background:none;color:var(--sub);font-size:.85rem;padding:.2rem}
+.pushban{max-width:1320px;margin:.6rem auto 0;padding:0 1rem;display:none}
+.pushban.show{display:flex}
+.pushban{gap:.6rem;align-items:center}
+.pushban > div{flex:1;background:#E8F3FF;border-radius:12px;padding:.6rem .9rem;font-size:.9rem;color:#1B64DA;display:flex;flex-direction:column}
+.pushban.show{background:transparent}
+.pushban .pb-on{border:0;background:var(--blue);color:#fff;border-radius:12px;padding:.65rem .9rem;font-weight:700;white-space:nowrap}
+.pushban .pb-x{border:0;background:transparent;color:var(--sub);font-size:1rem;padding:.4rem}
 .toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(20px);background:#191F28;color:#fff;padding:.7rem 1.1rem;border-radius:12px;font-size:.95rem;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -220,9 +229,18 @@ input,textarea,select{font-family:inherit;color:inherit}
 </header>
 
 <div class="status" id="status"><div id="statusText"></div></div>
+<div class="pushban" id="pushBan">
+  <div><b>🔔 알림 받기</b><span id="pushBanText">상대방이 일정을 추가하면 휴대폰으로 알려 드려요.</span></div>
+  <button class="pb-on" id="pushOnBtn">알림 켜기</button>
+  <button class="pb-x" id="pushBanX" aria-label="닫기">✕</button>
+</div>
 
 <main class="wrap month" id="wrap"></main>
-<footer style="text-align:center;padding:.5rem 0 6rem"><button id="logoutBtn" style="border:0;background:none;color:var(--faint);font-size:.85rem;text-decoration:underline">로그아웃</button></footer>
+<footer class="foot">
+  <button id="meBtn"></button><span>·</span>
+  <button id="bellBtn">🔔 알림</button><span>·</span>
+  <button id="logoutBtn">로그아웃</button>
+</footer>
 
 
 <div class="back" id="back">
@@ -285,6 +303,17 @@ input,textarea,select{font-family:inherit;color:inherit}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="back" id="whoModal" style="align-items:center">
+  <div class="modal" style="border-radius:24px;max-width:420px;text-align:center">
+    <h3 style="margin-bottom:.3rem">이 휴대폰은 누구 거예요?</h3>
+    <p style="color:var(--sub);margin:0 0 1.1rem;font-size:.95rem">상대방이 일정을 추가하면 알림을 보내 드리는 데 써요.</p>
+    <div class="pick" style="grid-template-columns:1fr 1fr">
+      <button type="button" class="alex on" data-me="alex" style="padding:1rem">알렉스</button>
+      <button type="button" class="wang on" data-me="wang" style="padding:1rem">왕경</button>
+    </div>
+  </div>
+</div>
 
 <div class="back" id="login" style="align-items:center">
   <form class="modal" id="loginForm" style="border-radius:24px;max-width:420px;text-align:center">
@@ -654,6 +683,7 @@ $("form").addEventListener("submit", async e=>{
     endTime: fType==="note" ? "" : $("iEnd").value,
     place: fType==="meet" ? $("iPlace").value.trim() : "",
     note, who:fWho, repeat:$("iRepeat").value,
+    by: prev ? (prev.by || ME || "") : (ME || ""),
     doneOn: prev && prev.doneOn ? Object.assign({},prev.doneOn) : {},
     createdAt: prev ? (prev.createdAt||now) : now,
     updatedAt: now
@@ -750,6 +780,80 @@ let toastT=null;
 function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),2400);}
 function setStatus(text){ $("status").classList.toggle("show",!!text); $("statusText").textContent=text||""; }
 
+/* ---------- 나는 누구? + 푸시 알림 (OneSignal) ---------- */
+// ▼▼▼ OneSignal App ID (Settings → Keys & IDs) ▼▼▼
+const ONESIGNAL_APP_ID = "PASTE_ONESIGNAL_APP_ID_HERE";
+// ▲▲▲
+let ME = lsGet("cal-me","");
+let OS = null;
+const PUSH_ON = /^[0-9a-f-]{36}$/i.test(ONESIGNAL_APP_ID) && location.protocol==="https:";
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+const isStandalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone===true;
+
+function syncFooter(){
+  $("meBtn").textContent = ME ? "나: "+WHO[ME]+" (변경)" : "나: 선택 안 함";
+  const on = !!(OS && OS.User && OS.User.PushSubscription && OS.User.PushSubscription.optedIn);
+  $("bellBtn").textContent = !PUSH_ON ? "🔕 알림 준비 중" : on ? "🔔 알림 켜짐" : "🔕 알림 꺼짐";
+  const showBan = PUSH_ON && KEY && ME && !on && lsGet("cal-pushban","")!=="x";
+  $("pushBan").classList.toggle("show", !!showBan);
+  if(isIOS && !isStandalone) $("pushBanText").textContent = "iPhone은 Safari 공유 버튼 → ‘홈 화면에 추가’ 후, 홈 화면 아이콘으로 열어야 알림을 켤 수 있어요.";
+}
+function askWho(){ $("whoModal").classList.add("show"); }
+$("whoModal").addEventListener("click", async e=>{
+  const b = e.target.closest("[data-me]"); if(!b) return;
+  ME = b.dataset.me; lsSet("cal-me", ME); $("whoModal").classList.remove("show");
+  if(!lsGet("cal-who-set","")){ fWho = ME; lsSet("cal-who", ME); lsSet("cal-who-set","1"); }
+  if(OS){ try{ await OS.login(ME); }catch(err){} }
+  syncFooter();
+});
+$("meBtn").addEventListener("click", askWho);
+
+async function enablePush(){
+  if(!PUSH_ON){ toast("알림 기능이 아직 설정되지 않았어요"); return; }
+  if(isIOS && !isStandalone){ toast("먼저 ‘홈 화면에 추가’한 뒤 홈 화면 아이콘으로 열어 주세요"); return; }
+  if(!("Notification" in window)){ toast("이 브라우저는 알림을 지원하지 않아요"); return; }
+  if(!ME){ askWho(); return; }
+  if(!OS){ toast("알림을 준비하는 중이에요. 잠시 후 다시 눌러 주세요"); return; }
+  try{
+    await OS.login(ME);
+    if(Notification.permission==="denied"){ toast("알림이 차단돼 있어요. 휴대폰 설정에서 이 사이트 알림을 허용해 주세요"); return; }
+    await OS.Notifications.requestPermission();
+    if(OS.User.PushSubscription.optedIn===false && Notification.permission==="granted") await OS.User.PushSubscription.optIn();
+    setTimeout(syncFooter, 800);
+    if(Notification.permission==="granted") toast("알림을 켰어요 🔔");
+  }catch(err){ toast("알림을 켜지 못했어요"); }
+}
+async function togglePush(){
+  const on = OS && OS.User.PushSubscription.optedIn;
+  if(on){ try{ await OS.User.PushSubscription.optOut(); toast("알림을 껐어요"); }catch(e){} syncFooter(); }
+  else enablePush();
+}
+$("pushOnBtn").addEventListener("click", enablePush);
+$("bellBtn").addEventListener("click", togglePush);
+$("pushBanX").addEventListener("click", ()=>{ lsSet("cal-pushban","x"); syncFooter(); });
+
+if(PUSH_ON){
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal){
+    try{
+      await OneSignal.init({
+        appId: ONESIGNAL_APP_ID,
+        serviceWorkerPath: "calendar/push/onesignal/OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "/calendar/push/onesignal/" },
+        notifyButton: { enable: false },
+        welcomeNotification: { disable: true }
+      });
+      OS = OneSignal;
+      if(ME) await OneSignal.login(ME);
+      OneSignal.User.PushSubscription.addEventListener("change", syncFooter);
+    }catch(err){ console.error(err); }
+    syncFooter();
+  });
+  const sc = document.createElement("script");
+  sc.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"; sc.defer = true;
+  document.head.appendChild(sc);
+}
+
 /* ---------- login ---------- */
 function showLogin(err){
   $("login").classList.add("show");
@@ -766,16 +870,19 @@ $("loginForm").addEventListener("submit", async e=>{
     if(res && res.ok){
       lsSet("cal-key",k); $("login").classList.remove("show"); $("iKey").value="";
       S.events = cleanEvents(res.events); cacheEvents(); lastLoad=Date.now(); setStatus(""); render();
+      if(!ME) askWho(); syncFooter();
     } else { KEY=""; $("loginErr").textContent = res && res.error==="auth" ? "비밀번호가 맞지 않아요" : "서버 오류가 있어요"; }
   }catch(err){ KEY=""; $("loginErr").textContent="연결하지 못했어요. 인터넷을 확인해 주세요."; }
 });
-$("logoutBtn").addEventListener("click",()=>{ lsSet("cal-key",""); lsSet("cal-cache",""); KEY=""; S.events=[]; render(); showLogin(""); });
+$("logoutBtn").addEventListener("click",()=>{ lsSet("cal-key",""); lsSet("cal-cache",""); KEY=""; syncFooter(); S.events=[]; render(); showLogin(""); });
 
 /* ---------- connect ---------- */
 render();
 if(!/^https:\/\/script\.google\.com\//.test(API_URL)){
   setStatus("아직 Google 시트와 연결되지 않았어요. index.html의 API_URL에 Apps Script 웹 앱 주소를 넣어 주세요.");
 } else if(!KEY){ showLogin(""); }
+syncFooter();
+if(KEY && !ME) setTimeout(askWho, 600);
 else {
   // 마지막으로 받은 일정을 먼저 보여 주기 (오프라인에서도 보이도록)
   try{ const c = JSON.parse(lsGet("cal-cache","") || "null"); if(c && Array.isArray(c.events)){ S.events = cleanEvents(c.events); render(); } }catch(e){}
