@@ -273,7 +273,7 @@ input,textarea,select{font-family:inherit;color:inherit}
       <label for="iPlace">장소 (선택)</label>
       <input id="iPlace" maxlength="120" placeholder="예: 강남역 2번 출구">
     </div>
-    <div class="f">
+    <div class="f" id="fNote">
       <label for="iNote" id="lNote">메모 (선택)</label>
       <textarea id="iNote" maxlength="4000" placeholder="자세한 내용을 적어 주세요"></textarea>
     </div>
@@ -285,7 +285,7 @@ input,textarea,select{font-family:inherit;color:inherit}
         <button type="button" data-v="both" class="both">♥ 함께</button>
       </div>
     </div>
-    <div class="f">
+    <div class="f" id="fRepeat">
       <label for="iRepeat">반복</label>
       <select id="iRepeat">
         <option value="">반복 안 함</option>
@@ -639,7 +639,8 @@ function setPick(box,val){[...$(box).children].forEach(b=>b.classList.toggle("on
 function syncTypeFields(){
   $("fTime").style.display = fType==="note" ? "none" : "";
   $("fPlace").style.display = fType==="meet" ? "" : "none";
-  $("lNote").textContent = fType==="note" ? "메모 내용" : "메모 (선택)";
+  $("fNote").style.display = fType==="note" ? "none" : "";
+  $("fRepeat").style.display = fType==="note" ? "none" : "";
   $("iTitle").placeholder = fType==="task" ? "예: 장보기, 관리비 내기" : fType==="meet" ? "예: 병원 예약, 친구 만나기" : "예: 기억할 것";
 }
 function openForm(id, type, date){
