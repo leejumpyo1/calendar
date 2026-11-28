@@ -639,8 +639,8 @@ function setPick(box,val){[...$(box).children].forEach(b=>b.classList.toggle("on
 function syncTypeFields(){
   $("fTime").style.display = fType==="note" ? "none" : "";
   $("fPlace").style.display = fType==="meet" ? "" : "none";
-  $("fNote").style.display = fType==="note" ? "none" : "";
-  $("fRepeat").style.display = fType==="note" ? "none" : "";
+  $("fNote").style.display = "none";
+  $("fRepeat").style.display = "none";
   $("iTitle").placeholder = fType==="task" ? "예: 장보기, 관리비 내기" : fType==="meet" ? "예: 병원 예약, 친구 만나기" : "예: 기억할 것";
 }
 function openForm(id, type, date){
